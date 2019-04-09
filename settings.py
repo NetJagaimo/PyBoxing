@@ -1,7 +1,7 @@
 # 遊戲設定
 WIDTH = 1000
 HEIGHT = 600
-TITLE = "Boxing!"
+TITLE = "PyBoxing"
 FPS = 60
 FONT_NAME = 'candara'
 

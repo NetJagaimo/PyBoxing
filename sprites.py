@@ -9,10 +9,12 @@ class Boxer(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.side = side
-        self.actions = ['Blocking', 'Dizzy', 'Hurt', 'Idle', 'KO', 'PunchLeft', 'PunchRight', 'PunchUp', 'Walk', 'WalkBack']
+        self.actions = ['Blocking', 'Dizzy', 'Hurt', 'Idle', 'KO', 'Punch', 'PunchUp', 'Walk', 'WalkBack']
 
         # 角色動畫相關初始化
         self.walking = False
+        self.punching = True
+        self.punching_up = False
         self.current_frame = 0
         self.last_update = 0
 
@@ -33,12 +35,12 @@ class Boxer(pg.sprite.Sprite):
         # 讀取資料
         self.action_frames = {} # 用一個dictionary存取所有動作的frames
         actions_dir = path.join(self.game.img_dir, self.side)
-        frame_num = {'Blocking':10, 'Dizzy':8, 'Hurt':8, 'Idle':10, 'KO':10, 'PunchLeft':6, 'PunchRight':6, 'PunchUp':7, 'Walk':10, 'WalkBack':10}
+        frame_num = {'Blocking':10, 'Dizzy':8, 'Hurt':8, 'Idle':10, 'KO':10, 'Punch':12, 'PunchUp':7, 'Walk':10, 'WalkBack':10}
         for action in self.actions:
             self.action_frames[action] = []
             action_dir = path.join(actions_dir, action)
             for i in range(frame_num[action]):
-                pic_path = path.join(action_dir, '__Boxing04_{}_00{}.png'.format(action, i))
+                pic_path = path.join(action_dir, '__Boxing04_{}_{:03}.png'.format(action, i))
                 pic = pg.image.load(pic_path).convert_alpha()
                 if self.side == 'blue':
                     pic = pg.transform.flip(pic, True, False)
@@ -58,18 +60,34 @@ class Boxer(pg.sprite.Sprite):
                 self.acc.x = -1 * BOXER_ACC
             if keys[pg.K_d]:
                 self.acc.x = BOXER_ACC
+            if keys[pg.K_f]:
+                self.punching = True
+            else:
+                self.punching = False
+            if keys[pg.K_h]:
+                self.punching_up = True
+            else:
+                self.punching_up = False
         elif self.side == 'blue':
             if keys[pg.K_LEFT]:
                 self.acc.x = -1 * BOXER_ACC
             if keys[pg.K_RIGHT]:
                 self.acc.x = BOXER_ACC
+            if keys[pg.K_COMMA]:
+                self.punching = True
+            else:
+                self.punching = False
+            if keys[pg.K_SLASH]:
+                self.punching_up = True
+            else:
+                self.punching_up = False
         
         # 摩擦力
         self.acc.x += self.vel.x * BOXER_FRICTION
         # Equation of motion
         self.vel += self.acc
         # 防止x軸速度永遠不為零
-        if abs(self.vel.x) < 0.25:
+        if abs(self.vel.x) < 0.35:
             self.vel.x = 0
         self.pos += self.vel + 0.5 * self.acc
         # 畫面邊界
@@ -94,29 +112,31 @@ class Boxer(pg.sprite.Sprite):
 
         # Walking animation
         if self.walking:
-            if now - self.last_update > 50:
-                self.last_update = now
-                self.current_frame = (self.current_frame + 1) % len(self.action_frames['Walk'])
-                bottom = self.rect.bottom
-                if self.side == 'red':
-                    if self.vel.x > 0:
-                        self.image = self.action_frames['Walk'][self.current_frame]
-                    else:
-                        self.image = self.action_frames['WalkBack'][self.current_frame]
-                elif self.side == 'blue':
-                    if self.vel.x > 0:
-                        self.image = self.action_frames['WalkBack'][self.current_frame]
-                    else:
-                        self.image = self.action_frames['Walk'][self.current_frame]
-                self.rect = self.image.get_rect()
-                self.rect.bottom = bottom
-        
+            if self.side == 'red':
+                if self.vel.x > 0:
+                    self.action('Walk', 50)
+                else:
+                    self.action('WalkBack', 50)
+            elif self.side == 'blue':
+                if self.vel.x > 0:
+                    self.action('WalkBack', 50)
+                else:
+                    self.action('Walk', 50)
+        # Punch Right animation
+        elif self.punching:
+            self.action('Punch', 50)
+        elif self.punching_up:
+            self.action('PunchUp', 50)
         # Idle animation
-        if not self.walking:
-            if now - self.last_update > 100:
-                self.last_update = now
-                self.current_frame = (self.current_frame + 1) % len(self.action_frames['Idle'])
-                bottom = self.rect.bottom
-                self.image = self.action_frames['Idle'][self.current_frame]
-                self.rect = self.image.get_rect()
-                self.rect.bottom = bottom
+        else:
+            self.action('Idle', 100)
+
+    def action(self, kind, rate):
+        now = pg.time.get_ticks()
+        if now - self.last_update > rate:
+            self.last_update = now
+            self.current_frame = (self.current_frame + 1) % len(self.action_frames[kind])
+            bottom = self.rect.bottom
+            self.image = self.action_frames[kind][self.current_frame]
+            self.rect = self.image.get_rect()
+            self.rect.bottom = bottom
