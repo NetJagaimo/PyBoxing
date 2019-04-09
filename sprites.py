@@ -70,10 +70,12 @@ class Boxer(pg.sprite.Sprite):
                 self.vel.x = PUNCH_REPEL_X
             else:
                 self.vel.x = -PUNCH_REPEL_X
-        if self.dizzy_num >= 8:
-            friction = BOXER_FRICTION_DIZZY_1
-        elif self.dizzy_num >= 12:
+
+        if self.dizzy_num >= 13:
             friction = BOXER_FRICTION_DIZZY_2
+        elif self.dizzy_num >= 8:
+            friction = BOXER_FRICTION_DIZZY_1
+
         else:
             friction = BOXER_FRICTION
         # 摩擦力
@@ -81,7 +83,7 @@ class Boxer(pg.sprite.Sprite):
         # Equation of motion
         self.vel += self.acc
         # 防止x軸速度永遠不為零
-        if abs(self.vel.x) < 0.35:
+        if abs(self.vel.x) < 0.6:
             self.vel.x = 0
         self.pos += self.vel + 0.5 * self.acc
         # 畫面邊界
@@ -106,7 +108,7 @@ class Boxer(pg.sprite.Sprite):
                 self.punching = True
             else:
                 self.punching = False
-            if keys[pg.K_h]:
+            if keys[pg.K_g]:
                 self.punching_up = True
             else:
                 self.punching_up = False
@@ -119,7 +121,7 @@ class Boxer(pg.sprite.Sprite):
                 self.punching = True
             else:
                 self.punching = False
-            if keys[pg.K_SLASH]:
+            if keys[pg.K_PERIOD]:
                 self.punching_up = True
             else:
                 self.punching_up = False
