@@ -1,0 +1,16 @@
+# 遊戲設定
+WIDTH = 1000
+HEIGHT = 600
+TITLE = "Boxing!"
+FPS = 60
+FONT_NAME = 'candara'
+
+# 角色設定
+BLOOD = 100
+BOXER_ACC = 0.6
+BOXER_FRICTION = -0.12
+BOXER_GRAV = 0.8
+
+# 顏色
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
