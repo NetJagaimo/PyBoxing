@@ -23,6 +23,8 @@ class Game:
     def new(self):
         # 開始新遊戲
         self.all_sprites = pg.sprite.Group()
+        self.red_team = pg.sprite.Group()
+        self.blue_team = pg.sprite.Group()
         self.boxer_red = Boxer(self, 'red')
         self.boxer_blue = Boxer(self, 'blue')
         self.run()
@@ -41,7 +43,41 @@ class Game:
         self.all_sprites.update()
 
         #碰撞判定
+        hits = pg.sprite.spritecollide(self.boxer_red, self.blue_team, False, pg.sprite.collide_mask)
+        if hits:
+            # 紅方判斷
+            if not self.boxer_blue.hurting and not self.boxer_red.walking \
+               and self.boxer_red.pos.x + 55 < self.boxer_blue.pos.x:
+                if self.boxer_red.punching:
+                    self.boxer_blue.blood -= 10
+                    self.boxer_blue.hurting = True
+                if self.boxer_red.punching_up:
+                    self.boxer_blue.blood -= 5
+                    self.boxer_blue.hurting = True
+                    self.boxer_blue.dizzy_num += random.randrange(1, 4)
+                    if self.boxer_blue.dizzy_num >= 16:
+                        self.boxer_blue.dizzy_num = 0
+                        self.boxer_blue.dizzying = True
+            # 藍方判斷
+            if not self.boxer_red.hurting and not self.boxer_blue.walking \
+               and self.boxer_blue.pos.x - 55 > self.boxer_red.pos.x:
+                if self.boxer_blue.punching:
+                    self.boxer_red.blood -= 10
+                    self.boxer_red.hurting = True
+                if self.boxer_blue.punching_up:
+                    self.boxer_red.blood -= 5
+                    self.boxer_red.hurting = True
+                    self.boxer_red.dizzy_num += random.randrange(1, 4)
+                    if self.boxer_red.dizzy_num >= 16:
+                        self.boxer_red.dizzy_num = 0
+                        self.boxer_red.dizzying = True
 
+        # 遊戲結束判斷
+        if self.boxer_red.blood <= 0:
+            self.playing = False
+        elif self.boxer_blue.blood <= 0:
+            self.playing = False
+                
     def events(self):
         # Game Loop - events，按鍵事件
         for event in pg.event.get():
@@ -59,7 +95,8 @@ class Game:
         
     def draw_blood(self):
         # 繪製當前血量
-        pass
+        self.draw_text(str(self.boxer_red.blood), 22, BLACK, 100, 50)
+        self.draw_text(str(self.boxer_blue.blood), 22, BLACK, 900, 50)
 
     def intro(self):
         # Game Intro，遊戲開始畫面
@@ -67,7 +104,15 @@ class Game:
     
     def gameover(self):
         # Game Over，遊戲結束畫面
-        pass
+        if not self.running:
+            return
+        self.screen.fill(WHITE)
+        if self.boxer_blue.blood <= 0:
+            self.draw_text('RED WIN!', 44, BLACK, WIDTH / 2, HEIGHT / 2)
+        else:
+            self.draw_text('BLUE WIN!', 44, BLACK, WIDTH / 2, HEIGHT / 2)
+        pg.display.flip()
+        self.wait_for_key()
     
     def wait_for_key(self):
         # 按下任何按鍵後才會繼續執行
@@ -87,14 +132,14 @@ class Game:
         font = pg.font.Font(self.font_name, size)
         text_surface = font.render(text, True, color)
         text_rect = text_surface.get_rect()
-        text.rect.midtop = (x, y)
+        text_rect.midtop = (x, y)
         self.screen.blit(text_surface, text_rect)
 
 game = Game()
 game.intro()
 while game.running:
     game.new()
-    game.gameover
+    game.gameover()
 
 pg.quit()
 quit()

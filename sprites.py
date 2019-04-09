@@ -5,7 +5,10 @@ vec = pg.math.Vector2
 
 class Boxer(pg.sprite.Sprite):
     def __init__(self, game, side):
-        self.groups = game.all_sprites
+        if side == 'red':
+            self.groups = game.all_sprites, game.red_team
+        else:
+            self.groups = game.all_sprites, game.blue_team
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.side = side
@@ -15,8 +18,12 @@ class Boxer(pg.sprite.Sprite):
         self.walking = False
         self.punching = True
         self.punching_up = False
+        self.hurting = False
+        self.dizzying = False
         self.current_frame = 0
         self.last_update = 0
+        self.stop_time = 0
+        self.unstoppable_count = 0
 
         # 角色圖片、位置、速度、加速度初始化
         self.load_images()
@@ -30,6 +37,10 @@ class Boxer(pg.sprite.Sprite):
             self.pos = vec(900, HEIGHT - 50)
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
+
+        # 角色數值初始化
+        self.blood = 100
+        self.dizzy_num = 0
         
     def load_images(self):
         # 讀取資料
@@ -52,8 +63,39 @@ class Boxer(pg.sprite.Sprite):
         # 角色所有動作
         self.animate()
         self.acc = vec(0, BOXER_GRAV)
-
-        # Key event
+        if not self.hurting and not self.dizzying:
+            self.events()
+        if self.hurting:
+            if self.side == 'blue':
+                self.vel.x = PUNCH_REPEL_X
+            else:
+                self.vel.x = -PUNCH_REPEL_X
+        if self.dizzy_num >= 8:
+            friction = BOXER_FRICTION_DIZZY_1
+        elif self.dizzy_num >= 12:
+            friction = BOXER_FRICTION_DIZZY_2
+        else:
+            friction = BOXER_FRICTION
+        # 摩擦力
+        self.acc.x += self.vel.x * friction
+        # Equation of motion
+        self.vel += self.acc
+        # 防止x軸速度永遠不為零
+        if abs(self.vel.x) < 0.35:
+            self.vel.x = 0
+        self.pos += self.vel + 0.5 * self.acc
+        # 畫面邊界
+        if self.pos.x + (self.rect.width / 2) > WIDTH:
+            self.pos.x = WIDTH - (self.rect.width / 2)
+        if self.pos.x - (self.rect.width / 2) < 0:
+            self.pos.x = 0 + (self.rect.width / 2)
+        if self.pos.y > HEIGHT:
+            self.pos.y = HEIGHT
+        
+        self.rect.midbottom = self.pos # 將角色的rect更新為pos向量的座標
+    
+    def events(self):
+        # Key events
         keys = pg.key.get_pressed()
         if self.side == 'red':
             if keys[pg.K_a]:
@@ -81,37 +123,25 @@ class Boxer(pg.sprite.Sprite):
                 self.punching_up = True
             else:
                 self.punching_up = False
-        
-        # 摩擦力
-        self.acc.x += self.vel.x * BOXER_FRICTION
-        # Equation of motion
-        self.vel += self.acc
-        # 防止x軸速度永遠不為零
-        if abs(self.vel.x) < 0.35:
-            self.vel.x = 0
-        self.pos += self.vel + 0.5 * self.acc
-        # 畫面邊界
-        if self.pos.x + (self.rect.width / 2) > WIDTH:
-            self.pos.x = WIDTH - (self.rect.width / 2)
-        if self.pos.x - (self.rect.width / 2) < 0:
-            self.pos.x = 0 + (self.rect.width / 2)
-        if self.pos.y > HEIGHT:
-            self.pos.y = HEIGHT
-        
-        self.rect.midbottom = self.pos # 將角色的rect更新為pos向量的座標
-    
+
     def animate(self):
         # 角色所有動畫
         now = pg.time.get_ticks()
 
-        # 動作判斷
+        # 走路判斷
         if self.vel.x != 0:
             self.walking = True
         else:
             self.walking = False
 
+        # Hurt animation
+        if self.hurting:
+            self.action_unstoppable('Hurt', 50)
+        # Dizzy animation
+        elif self.dizzying:
+            self.action_unstoppable('Dizzy', 150)
         # Walking animation
-        if self.walking:
+        elif self.walking:
             if self.side == 'red':
                 if self.vel.x > 0:
                     self.action('Walk', 50)
@@ -130,6 +160,8 @@ class Boxer(pg.sprite.Sprite):
         # Idle animation
         else:
             self.action('Idle', 100)
+        
+        self.mask = pg.mask.from_surface(self.image)
 
     def action(self, kind, rate):
         now = pg.time.get_ticks()
@@ -140,3 +172,20 @@ class Boxer(pg.sprite.Sprite):
             self.image = self.action_frames[kind][self.current_frame]
             self.rect = self.image.get_rect()
             self.rect.bottom = bottom
+    
+    def action_unstoppable(self, kind, rate):
+        now = pg.time.get_ticks()
+        if now - self.last_update > rate:
+            if self.unstoppable_count >= len(self.action_frames[kind]):
+                if kind == 'Hurt':
+                    self.hurting = False
+                elif kind == 'Dizzy':
+                    self.dizzying = False
+                self.unstoppable_count = 0
+                return
+            self.last_update = now
+            bottom = self.rect.bottom
+            self.image = self.action_frames[kind][self.unstoppable_count]
+            self.rect = self.image.get_rect()
+            self.rect.bottom = bottom
+            self.unstoppable_count += 1
