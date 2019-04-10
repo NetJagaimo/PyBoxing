@@ -73,7 +73,7 @@ class Game:
             if not self.boxer_blue.hurting and not self.boxer_red.walking \
                and self.boxer_red.pos.x + 55 < self.boxer_blue.pos.x:
                 # 正拳擊中判定
-                if self.boxer_red.punching:
+                if self.boxer_red.punching and not self.boxer_blue.dizzying:
                     self.hurt_sound.play()
                     self.boxer_blue.blood -= 10
                     self.boxer_blue.hurting = True
@@ -91,7 +91,7 @@ class Game:
             if not self.boxer_red.hurting and not self.boxer_blue.walking \
                and self.boxer_blue.pos.x - 55 > self.boxer_red.pos.x:
                 # 正拳擊中判定
-                if self.boxer_blue.punching:
+                if self.boxer_blue.punching and not self.boxer_red.dizzying:
                     self.hurt_sound.play()
                     self.boxer_red.blood -= 10
                     self.boxer_red.hurting = True
