@@ -65,15 +65,20 @@ class Game:
     def update(self):
         # Game Loop - Update，遊戲的動作
         self.all_sprites.update()
-
         #碰撞判定
         hits = pg.sprite.spritecollide(self.boxer_red, self.blue_team, False, pg.sprite.collide_mask)
         if hits:
             # 紅方攻擊判斷
-            if not self.boxer_blue.hurting and not self.boxer_red.walking \
+            if not self.boxer_blue.hurting and not self.boxer_blue.dizzying \
+               and not self.boxer_red.walking \
                and self.boxer_red.pos.x + 55 < self.boxer_blue.pos.x:
+                # 衝刺攻擊判定
+                if self.boxer_red.sprinting:
+                    self.hurt_sound.play()
+                    self.boxer_blue.blood -= 15
+                    self.boxer_blue.hurting = True
                 # 正拳擊中判定
-                if self.boxer_red.punching and not self.boxer_blue.dizzying:
+                if self.boxer_red.punching:
                     self.hurt_sound.play()
                     self.boxer_blue.blood -= 10
                     self.boxer_blue.hurting = True
@@ -83,15 +88,21 @@ class Game:
                     self.boxer_blue.blood -= 5
                     self.boxer_blue.hurting = True
                     self.boxer_blue.dizzy_num += random.randrange(1, 4)
-                    if self.boxer_blue.dizzy_num >= 16:
+                    if self.boxer_blue.dizzy_num >= 13:
                         self.dizzy_sound.play()
                         self.boxer_blue.dizzy_num = 0
                         self.boxer_blue.dizzying = True
             # 藍方攻擊判斷
-            if not self.boxer_red.hurting and not self.boxer_blue.walking \
+            if not self.boxer_red.hurting and not self.boxer_red.dizzying \
+               and not self.boxer_blue.walking \
                and self.boxer_blue.pos.x - 55 > self.boxer_red.pos.x:
+                # 衝刺攻擊判定
+                if self.boxer_blue.sprinting:
+                    self.hurt_sound.play()
+                    self.boxer_red.blood -= 15
+                    self.boxer_red.hurting = True
                 # 正拳擊中判定
-                if self.boxer_blue.punching and not self.boxer_red.dizzying:
+                if self.boxer_blue.punching:
                     self.hurt_sound.play()
                     self.boxer_red.blood -= 10
                     self.boxer_red.hurting = True
@@ -101,7 +112,7 @@ class Game:
                     self.boxer_red.blood -= 5
                     self.boxer_red.hurting = True
                     self.boxer_red.dizzy_num += random.randrange(1, 4)
-                    if self.boxer_red.dizzy_num >= 16:
+                    if self.boxer_red.dizzy_num >= 13:
                         self.dizzy_sound.play()
                         self.boxer_red.dizzy_num = 0
                         self.boxer_red.dizzying = True
@@ -126,6 +137,7 @@ class Game:
         self.screen.blit(self.stage_img, self.stage_img_rect)
         self.all_sprites.draw(self.screen)
         self.draw_blood()
+        self.draw_charge_point()
         pg.display.flip()
         
     def draw_blood(self):
@@ -142,8 +154,23 @@ class Game:
         self.red_blood_rect = self.red_blood.get_rect()
         self.red_blood_rect.topleft = (100, 50)
         self.screen.blit(self.red_blood, self.red_blood_rect)
-
-        pg.display.flip()
+    
+    def draw_charge_point(self):
+        # 繪製集氣條
+        # 藍方集氣條
+        if self.boxer_blue.charging and self.boxer_blue.charge_point > 0:
+            self.blue_charge_point = pg.Surface((2 * self.boxer_blue.charge_point, 20))
+            self.blue_charge_point.fill(GREEN)
+            self.blue_charge_point_rect = self.blue_charge_point.get_rect()
+            self.blue_charge_point_rect.bottomleft = (self.boxer_blue.pos.x - 60, self.boxer_blue.rect.top + 10)
+            self.screen.blit(self.blue_charge_point, self.blue_charge_point_rect)
+        # 紅方集氣條
+        if self.boxer_red.charging and self.boxer_red.charge_point > 0:
+            self.red_charge_point = pg.Surface((2 * self.boxer_red.charge_point, 20))
+            self.red_charge_point.fill(GREEN)
+            self.red_charge_point_rect = self.red_charge_point.get_rect()
+            self.red_charge_point_rect.bottomleft = (self.boxer_red.pos.x - 30, self.boxer_red.rect.top + 10)
+            self.screen.blit(self.red_charge_point, self.red_charge_point_rect)
 
     def intro(self):
         # Game Intro，遊戲開始畫面

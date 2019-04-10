@@ -21,6 +21,11 @@ class Boxer(pg.sprite.Sprite):
         self.hurting = False
         self.dizzying = False
         self.KOing = False
+        self.charging = False
+        self.sprinting = False
+        self.sprinting_punching_count = 0
+        self.charge_point = -1
+        self.charge_point_last_update = 0
         self.current_frame = 0
         self.last_update = 0
         self.stop_time = 0
@@ -63,22 +68,41 @@ class Boxer(pg.sprite.Sprite):
     def update(self):
         # 角色所有動作
         self.animate()
+        friction = BOXER_FRICTION
+        # Charge
+        if self.charging:
+            now = pg.time.get_ticks()
+            if now - self.charge_point_last_update > 50:
+                self.charge_point_last_update = now
+                self.charge_point += 1
+                if self.charge_point >= 35:
+                    self.sprinting = True
+                    self.charge_point = -1
+                    self.charging = False
+                elif self.charge_point >= 25:
+                    friction = CHARGING_FRICTION_2
+                elif self.charge_point >= 10:
+                    friction = CHARGING_FRICTION_1
         self.acc = vec(0, BOXER_GRAV)
         if not self.hurting and not self.dizzying and not self.KOing:
             self.events()
+        # 受傷動作
         if self.hurting:
             if self.side == 'blue':
                 self.vel.x = PUNCH_REPEL_X
             else:
                 self.vel.x = -PUNCH_REPEL_X
-
-        if self.dizzy_num >= 13:
+        # 衝刺動作
+        if self.sprinting:
+            if self.side == 'red':
+                self.vel.x = SPRINT_SPEED
+            else:
+                self.vel.x = -SPRINT_SPEED
+        # 暈眩值判定及動作
+        if self.dizzy_num >= 9:
             friction = BOXER_FRICTION_DIZZY_2
-        elif self.dizzy_num >= 8:
+        elif self.dizzy_num >= 5:
             friction = BOXER_FRICTION_DIZZY_1
-
-        else:
-            friction = BOXER_FRICTION
         # 摩擦力
         self.acc.x += self.vel.x * friction
         # Equation of motion
@@ -101,6 +125,10 @@ class Boxer(pg.sprite.Sprite):
         # Key events
         keys = pg.key.get_pressed()
         if self.side == 'red':
+            if keys[pg.K_h] and not self.sprinting:
+                self.charging = True
+            else:
+                self.charging = False
             if keys[pg.K_a]:
                 self.acc.x = -1 * BOXER_ACC
             if keys[pg.K_d]:
@@ -114,6 +142,10 @@ class Boxer(pg.sprite.Sprite):
             else:
                 self.punching_up = False
         elif self.side == 'blue':
+            if keys[pg.K_SLASH] and not self.sprinting:
+                self.charging = True
+            else:
+                self.charging = False
             if keys[pg.K_LEFT]:
                 self.acc.x = -1 * BOXER_ACC
             if keys[pg.K_RIGHT]:
@@ -132,13 +164,16 @@ class Boxer(pg.sprite.Sprite):
         now = pg.time.get_ticks()
 
         # 走路判斷
-        if self.vel.x != 0:
+        if self.vel.x != 0 and not self.sprinting:
             self.walking = True
         else:
             self.walking = False
 
+        # Sprint animation
+        if self.sprinting:
+            self.action_unstoppable('Punch', 20)
         # KO animation
-        if self.KOing:
+        elif self.KOing:
             self.action_unstoppable('KO', 50)    
         # Hurt animation
         elif self.hurting:
@@ -190,6 +225,11 @@ class Boxer(pg.sprite.Sprite):
                 elif kind == 'KO':
                     self.KOing = False
                     self.game.playing = False
+                elif kind == 'Punch':
+                    self.sprinting_punching_count += 1
+                    if self.sprinting_punching_count == 2:
+                        self.sprinting = False
+                        self.sprinting_punching_count = 0
                 self.unstoppable_count = 0
                 return
             self.last_update = now
