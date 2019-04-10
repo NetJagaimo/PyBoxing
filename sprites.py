@@ -137,15 +137,15 @@ class Boxer(pg.sprite.Sprite):
         else:
             self.walking = False
 
+        # KO animation
+        if self.KOing:
+            self.action_unstoppable('KO', 50)    
         # Hurt animation
-        if self.hurting:
+        elif self.hurting:
             self.action_unstoppable('Hurt', 50)
         # Dizzy animation
         elif self.dizzying:
             self.action_unstoppable('Dizzy', 150)
-        # KO animation
-        elif self.KOing:
-            self.action_unstoppable('KO', 70)
         # Walking animation
         elif self.walking:
             if self.side == 'red':
