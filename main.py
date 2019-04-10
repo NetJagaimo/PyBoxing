@@ -87,7 +87,7 @@ class Game:
                         self.dizzy_sound.play()
                         self.boxer_blue.dizzy_num = 0
                         self.boxer_blue.dizzying = True
-            # 藍方攻 擊判斷
+            # 藍方攻擊判斷
             if not self.boxer_red.hurting and not self.boxer_blue.walking \
                and self.boxer_blue.pos.x - 55 > self.boxer_red.pos.x:
                 # 正拳擊中判定
@@ -108,9 +108,9 @@ class Game:
 
         # 遊戲結束判斷
         if self.boxer_red.blood <= 0:
-            self.playing = False
+            self.boxer_red.KOing = True
         elif self.boxer_blue.blood <= 0:
-            self.playing = False
+            self.boxer_blue.KOing = True
                 
     def events(self):
         # Game Loop - events，按鍵事件

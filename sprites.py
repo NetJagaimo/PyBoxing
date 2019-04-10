@@ -20,6 +20,7 @@ class Boxer(pg.sprite.Sprite):
         self.punching_up = False
         self.hurting = False
         self.dizzying = False
+        self.KOing = False
         self.current_frame = 0
         self.last_update = 0
         self.stop_time = 0
@@ -63,7 +64,7 @@ class Boxer(pg.sprite.Sprite):
         # 角色所有動作
         self.animate()
         self.acc = vec(0, BOXER_GRAV)
-        if not self.hurting and not self.dizzying:
+        if not self.hurting and not self.dizzying and not self.KOing:
             self.events()
         if self.hurting:
             if self.side == 'blue':
@@ -142,6 +143,9 @@ class Boxer(pg.sprite.Sprite):
         # Dizzy animation
         elif self.dizzying:
             self.action_unstoppable('Dizzy', 150)
+        # KO animation
+        elif self.KOing:
+            self.action_unstoppable('KO', 70)
         # Walking animation
         elif self.walking:
             if self.side == 'red':
@@ -183,6 +187,9 @@ class Boxer(pg.sprite.Sprite):
                     self.hurting = False
                 elif kind == 'Dizzy':
                     self.dizzying = False
+                elif kind == 'KO':
+                    self.KOing = False
+                    self.game.playing = False
                 self.unstoppable_count = 0
                 return
             self.last_update = now
