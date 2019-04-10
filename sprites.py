@@ -129,6 +129,7 @@ class Boxer(pg.sprite.Sprite):
                 self.charging = True
             else:
                 self.charging = False
+                self.charge_point = 0
             if keys[pg.K_a]:
                 self.acc.x = -1 * BOXER_ACC
             if keys[pg.K_d]:
@@ -146,6 +147,7 @@ class Boxer(pg.sprite.Sprite):
                 self.charging = True
             else:
                 self.charging = False
+                self.charge_point = 0
             if keys[pg.K_LEFT]:
                 self.acc.x = -1 * BOXER_ACC
             if keys[pg.K_RIGHT]:

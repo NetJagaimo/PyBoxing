@@ -75,7 +75,7 @@ class Game:
                 # 衝刺攻擊判定
                 if self.boxer_red.sprinting:
                     self.hurt_sound.play()
-                    self.boxer_blue.blood -= 15
+                    self.boxer_blue.blood -= 20
                     self.boxer_blue.hurting = True
                 # 正拳擊中判定
                 if self.boxer_red.punching:
@@ -99,7 +99,7 @@ class Game:
                 # 衝刺攻擊判定
                 if self.boxer_blue.sprinting:
                     self.hurt_sound.play()
-                    self.boxer_red.blood -= 15
+                    self.boxer_red.blood -= 20
                     self.boxer_red.hurting = True
                 # 正拳擊中判定
                 if self.boxer_blue.punching:
