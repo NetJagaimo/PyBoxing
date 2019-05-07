@@ -1,15 +1,15 @@
 # How to play
 
 ## Player 1
-* Backword: A
-* Forward: D
-* Straight punch: F
-* Uppercut: G
-* Charge punch: H
+* Backword: <kbd>A</kbd>
+* Forward: <kbd>D</kbd>
+* Straight punch: <kbd>F</kbd>
+* Uppercut: <kbd>G</kbd>
+* Charge punch: <kbd>H</kbd>
   
 ## Player 2
-* Backword: ← 
-* Forward: →
-* Straight punch: ,
-* Uppercut: .
-* Charge punch: ?
+* Backword: <kbd>←</kbd>
+* Forward: <kbd>→</kbd>
+* Straight punch: <kbd>,</kbd>
+* Uppercut: <kbd>.</kbd>
+* Charge punch: <kbd>?</kbd>
